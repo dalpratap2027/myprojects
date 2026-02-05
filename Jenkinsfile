@@ -1,52 +1,84 @@
 pipeline {
+ 
     agent { label "${LABEL_NAME}" }
-    environment { 
-        IMAGE_NAME = "simple15"
-        IMAGE_TAG  = "${BUILD_NUMBER}"
+ 
+    environment {
+        IMAGE_NAME   = "netli"
+        IMAGE_TAG    = "${BUILD_NUMBER}"
         DOCKER_IMAGE = "${IMAGE_NAME}:${IMAGE_TAG}"
-        
     }
+ 
     stages {
-        stage ( 'CODE' ) {
+ 
+        stage('Code Checkout') {
             steps {
-                git url:"https://github.com/dalpratap2027/myprojects.git" , branch: "main"                 
+                git branch: 'main',
+                    url: 'https://github.com/shikoh-zaidi/myfirstproject.git'
             }
         }
-        stage ( 'build' ) {
-             steps {
-                 sh "docker build -t ${DOCKER_IMAGE} ."
-             }
-        }   
-        
-         stage ('deploy') {
-               steps {
-                   sh "docker stop c1 || true"
-                   sh "docker rm c1 || true"
-                   sh "docker run -d --name c1 -p 80:80 ${DOCKER_IMAGE} sleep infinity"
-                   
-               }
+ 
+        stage('Build') {
+            steps {
+                sh "docker build -t ${DOCKER_IMAGE} ."
+            }
+        }
+ 
+        stage('Deploy') {
+            steps {
+                sh '''
+                    docker stop c1 || true
+                    docker rm c1 || true
+                    docker run -d \
+                      -p 80:80 \
+                      --name c1 \
+                      --restart always \
+                      ${DOCKER_IMAGE}
+                '''
+            }
+        }
     }
-}
+ 
     post {
         success {
-
+            archiveArtifacts artifacts: '*.tar'
             emailext(
-            body: '''THIS MAIL IS REGARDING THE successful BUILD.
-FOR THE REFERENCE CHECK COSNSOLE OUTPUT OF ${BUILD_NUMBER}''', 
-    subject: 'Congratulationsss Build successful ${BUILD_NAME}', 
-    to: 'dalpratap@gmail.com'
+                subject: "Build Success: ${JOB_NAME} #${BUILD_NUMBER}",
+                body: """
+Hello Team,
+ 
+The Jenkins build completed successfully.
+ 
+Job Name : ${JOB_NAME}
+Build No : ${BUILD_NUMBER}
+Docker Image : ${DOCKER_IMAGE}
+Build URL: ${BUILD_URL}
+ 
+Regards,
+Jenkins
+""",
+                to: 'shikoh.zaidi@live.com'
             )
         }
+ 
         failure {
             emailext(
-            body: '''THIS MAIL IS REGARDING THE FAILED BUILD.
-FOR THE REFERENCE CHECK COSNSOLE OUTPUT OF ${BUILD_NUMBER}''', 
-    subject: 'WARNING!!!!! Build Failed ${BUILD_NAME}', 
-    to: 'dalpratap@gmail.com'
+                subject: "Build Failed: ${JOB_NAME} #${BUILD_NUMBER}",
+                body: """
+Hello Team,
+ 
+The Jenkins build has failed.
+ 
+Job Name : ${JOB_NAME}
+Build No : ${BUILD_NUMBER}
+Build URL: ${BUILD_URL}
+ 
+Please check the logs for details.
+ 
+Regards,
+Jenkins
+""",
+                to: 'shikoh.zaidi@live.com'
             )
         }
-
-                }
-            
-        
+    }
 }
