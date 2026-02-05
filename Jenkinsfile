@@ -9,7 +9,7 @@ pipeline {
     stages {
         stage ( 'CODE' ) {
             steps {
-                git url:"https://github.com/Huzefa211/agentdocker.git" , branch: "main"                 
+                git url:"https://github.com/dalpratap2027/myprojects.git" , branch: "main"                 
             }
         }
         stage ( 'build' ) {
@@ -29,7 +29,7 @@ pipeline {
 }
     post {
         success {
-archivedArtifacts artifacts:'*.tar'
+
             emailext(
             body: '''THIS MAIL IS REGARDING THE successful BUILD.
 FOR THE REFERENCE CHECK COSNSOLE OUTPUT OF ${BUILD_NUMBER}''', 
